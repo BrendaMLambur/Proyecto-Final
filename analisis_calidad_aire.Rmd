@@ -1,0 +1,40 @@
+---
+title: "Análisis Exploratorio y Limpieza de Datos de Contaminación del Aire"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+library(tidyverse)
+library(lubridate)
+# Cambia esta ruta si tu archivo CSV está en otro lugar
+data <- read_csv("pollution_us_2000_2016.csv")
+
+# Mostrar estructura y nombres de columnas
+glimpse(data)
+print(colnames(data))
+data <- data %>%
+  mutate(`Date Local` = as.Date(`Date Local`, format = "%Y-%m-%d")) %>%
+  mutate(year = year(`Date Local`), month = month(`Date Local`, label = TRUE))
+
+summary(select(data, `NO2 Mean`, `O3 Mean`, `SO2 Mean`, `CO Mean`))
+
+data_clean <- data %>%
+  filter(!is.na(`NO2 Mean`), !is.na(`O3 Mean`), !is.na(`SO2 Mean`), !is.na(`CO Mean`))
+p1 <- data_clean %>%
+  group_by(year) %>%
+  summarise(mean_NO2 = mean(`NO2 Mean`)) %>%
+  ggplot(aes(x = year, y = mean_NO2)) +
+  geom_line(color = "blue") + geom_point() +
+  labs(title = "Evolución anual promedio de NO2", x = "Año", y = "Promedio NO2 Mean") +
+  theme_minimal()
+print(p1)
+p2 <- data_clean %>%
+  ggplot(aes(x = month, y = `O3 Mean`)) +
+  geom_boxplot(fill = "lightgreen") +
+  labs(title = "Distribución mensual de O3 Mean", x = "Mes", y = "O3 Mean") +
+  theme_minimal()
+print(p2)
+cat("Hallazgos iniciales:\n")
+cat("- El promedio anual de NO2 muestra variabilidad relacionada con factores ambientales.\n")
+cat("- La distribución mensual de O3 muestra variabilidad significativa entre meses.\n")
